@@ -5,6 +5,8 @@ use reqwest::{Method, header::HeaderMap};
 use serde::{Deserialize, Serialize};
 use url::Url;
 
+use crate::ExtraArgs;
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DiffConfig {
     #[serde(flatten)]
@@ -48,9 +50,6 @@ pub struct ResponseProfile {
     pub skip_body: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
-pub struct DiffArgs {}
-
 impl DiffConfig {
     /// Loads a `DiffConfig` from a YAML file.
     pub async fn load_yaml(path: &str) -> anyhow::Result<Self> {
@@ -69,7 +68,7 @@ impl DiffConfig {
 }
 
 impl DiffProfile {
-    pub async fn diff(&self, _args: DiffArgs) -> Result<String> {
+    pub async fn diff(&self, args: ExtraArgs) -> Result<String> {
         // let resp1 = self.req1.send(&args).await?;
         // let resp2 = self.req2.send(&args).await?;
 
@@ -78,6 +77,9 @@ impl DiffProfile {
 
         // diff_test(text1, text2)
 
-        todo!()
+        println!("profile {:?}", self);
+        println!("args {:?}", args);
+
+        Ok("".to_string())
     }
 }
