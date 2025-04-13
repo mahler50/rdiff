@@ -27,7 +27,8 @@ async fn run(args: RunArgs) -> Result<()> {
 
     let extra_args: ExtraArgs = args.extra_params.into();
 
-    profile.diff(extra_args).await?;
+    let output = profile.diff(extra_args).await?;
+    println!("{}", output);
 
     Ok(())
 }
