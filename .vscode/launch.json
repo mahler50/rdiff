@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cppdbg",
+            "request": "launch",
+            "name": "Debug Rust Application",
+            "program": "${workspaceFolder}/target/debug/${input:executableName}",
+            "args": [
+                "run",
+                "-c",
+                "${workspaceFolder}/config/test.yaml",
+                "-p",
+                "todo",
+                "-e",
+                "a=b"
+            ],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "cargo build"
+        }
+    ],
+    "inputs": [
+        {
+            "type": "promptString",
+            "id": "executableName",
+            "description": "Enter the name of your Rust executable (e.g., rdiff)"
+        }
+    ]
+}
