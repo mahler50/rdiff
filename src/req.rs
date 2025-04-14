@@ -93,6 +93,27 @@ impl RequestProfile {
             _ => Err(anyhow!("Unsupported content type")),
         }
     }
+
+    pub(crate) fn validate(&self) -> Result<()> {
+        if let Some(ref params) = self.params {
+            if !params.is_object() {
+                return Err(anyhow!(
+                    "params must be an object but got: \n{}",
+                    serde_yaml::to_string(params)?
+                ));
+            }
+        }
+        if let Some(ref body) = self.body {
+            if !body.is_object() {
+                return Err(anyhow!(
+                    "body must be an object but got: \n{}",
+                    serde_yaml::to_string(body)?
+                ));
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl ResponseExt {
