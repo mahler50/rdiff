@@ -22,7 +22,7 @@ pub struct RequestProfile {
     pub url: Url,
     /// Http request parameters.
     /// Defaults to None.
-    #[serde(skip_serializing_if = "Option::is_none", default)]
+    #[serde(skip_serializing_if = "empty_json_value", default)]
     pub params: Option<serde_json::Value>,
     #[serde(
         with = "http_serde::header_map",
@@ -30,14 +30,51 @@ pub struct RequestProfile {
         default
     )]
     pub headers: HeaderMap,
-    #[serde(skip_serializing_if = "Option::is_none", default)]
+    #[serde(skip_serializing_if = "empty_json_value", default)]
     pub body: Option<serde_json::Value>,
+}
+
+impl FromStr for RequestProfile {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let mut url = Url::parse(s)?;
+        let qs = url.query_pairs();
+        let mut params = json!({});
+        for (k, v) in qs {
+            params[&*k] = v.into();
+        }
+        url.set_query(None);
+
+        Ok(Self::new(
+            Method::GET,
+            url.to_string(),
+            Some(params),
+            HeaderMap::new(),
+            None,
+        ))
+    }
 }
 
 #[derive(Debug)]
 pub struct ResponseExt(Response);
 
 impl RequestProfile {
+    pub fn new(
+        method: Method,
+        url: String,
+        params: Option<serde_json::Value>,
+        headers: HeaderMap,
+        body: Option<serde_json::Value>,
+    ) -> Self {
+        Self {
+            method,
+            url: Url::parse(&url).unwrap(),
+            params,
+            headers,
+            body,
+        }
+    }
     pub async fn send(&self, args: &ExtraArgs) -> Result<ResponseExt> {
         let (headers, query, body) = self.generate(args)?;
         let client = Client::new();
@@ -133,6 +170,14 @@ impl ResponseExt {
 
         Ok(output)
     }
+
+    pub fn get_header_keys(&self) -> Vec<String> {
+        self.0
+            .headers()
+            .iter()
+            .map(|(k, _)| k.to_string())
+            .collect()
+    }
 }
 
 fn get_headers_text(resp: &Response, skip_headers: &[String]) -> Result<String> {
@@ -166,4 +211,11 @@ fn get_content_type(headers: &HeaderMap) -> Option<String> {
         .get(header::CONTENT_TYPE)
         .and_then(|v| v.to_str().unwrap().split(";").next())
         .map(|v| v.to_string())
+}
+
+/// Check if the JSON value is null or empty object.
+fn empty_json_value(v: &Option<serde_json::Value>) -> bool {
+    v.as_ref().map_or(true, |v| {
+        v.is_null() || (v.is_object() && v.as_object().unwrap().is_empty())
+    })
 }

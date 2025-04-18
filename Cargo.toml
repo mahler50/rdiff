@@ -8,6 +8,7 @@ authors = ["whn"]
 anyhow = "1.0.97"
 clap = { version = "4.5.35", features = ["derive"] }
 console = "0.15.11"
+dialoguer = "0.11.0"
 http-serde = "2.1.1"
 reqwest = { version = "0.12.15" , default-features=false, features = ["rustls-tls"]}
 serde = { version = "1.0.219", features = ["derive"] }

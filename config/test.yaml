@@ -38,3 +38,22 @@ todo:
       - server-timing
     skip_body:
       - id
+todo2:
+  req1:
+    method: GET
+    url: https://jsonplaceholder.typicode.com/todos/1
+  req2:
+    method: GET
+    url: https://jsonplaceholder.typicode.com/todos/2
+  resp:
+    skip_headers:
+    - date
+    - content-length
+    - report-to
+    - reporting-endpoints
+    - x-ratelimit-limit
+    - x-ratelimit-remaining
+    - x-ratelimit-reset
+    - cf-cache-status
+    - cf-ray
+    - alt-svc
