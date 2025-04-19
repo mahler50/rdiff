@@ -195,13 +195,10 @@ fn get_headers_text(resp: &Response, skip_headers: &[String]) -> Result<String> 
 
 fn filter_json(text: &str, skip: &[String]) -> Result<String> {
     let mut json: serde_json::Value = serde_json::from_str(text)?;
-    match json {
-        serde_json::Value::Object(ref mut obj) => {
-            for k in skip {
-                obj.remove(k);
-            }
+    if let serde_json::Value::Object(ref mut obj) = json {
+        for k in skip {
+            obj.remove(k);
         }
-        _ => {}
     }
     Ok(serde_json::to_string_pretty(&json)?)
 }
@@ -215,7 +212,6 @@ fn get_content_type(headers: &HeaderMap) -> Option<String> {
 
 /// Check if the JSON value is null or empty object.
 fn empty_json_value(v: &Option<serde_json::Value>) -> bool {
-    v.as_ref().map_or(true, |v| {
-        v.is_null() || (v.is_object() && v.as_object().unwrap().is_empty())
-    })
+    v.as_ref()
+        .is_none_or(|v| v.is_null() || (v.is_object() && v.as_object().unwrap().is_empty()))
 }

@@ -3,7 +3,7 @@ use clap::Parser;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::{Input, MultiSelect};
 use rdiff::cli::{Action, Args, RunArgs};
-use rdiff::{DiffConfig, DiffProfile, ExtraArgs, RequestProfile, ResponseProfile};
+use rdiff::{DiffConfig, DiffProfile, ExtraArgs, RequestProfile, ResponseProfile, highlight_text};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -36,6 +36,7 @@ async fn run(args: RunArgs) -> Result<()> {
     Ok(())
 }
 
+/// Parse config content using cli.
 async fn parse() -> Result<()> {
     let theme = ColorfulTheme::default();
     let url1: String = Input::with_theme(&theme)
@@ -66,8 +67,10 @@ async fn parse() -> Result<()> {
     let res = ResponseProfile::new(skip_headers, vec![]);
     let profile = DiffProfile::new(req1, req2, res);
     let config = DiffConfig::new(vec![(profile_name, profile)].into_iter().collect());
+
     let result = serde_yaml::to_string(&config)?;
-    println!("---\n{}", result);
+    let highlighten_text = highlight_text(&result, "yaml")?;
+    println!("{}", highlighten_text);
 
     Ok(())
 }
