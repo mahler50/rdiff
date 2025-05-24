@@ -1,0 +1,10 @@
+todo:
+  url: https://jsonplaceholder.typicode.com/todos/1
+  params:
+    a: 1
+    b: 2
+todo2:
+  url: https://jsonplaceholder.typicode.com/todos/2
+  params:
+    c: 3
+    d: 4

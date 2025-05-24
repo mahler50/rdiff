@@ -62,13 +62,19 @@ pub fn diff_text(text1: &str, text2: &str) -> Result<String> {
 }
 
 /// Do syntax highlighting on `text` with syntax extention name.
-pub fn highlight_text(text: &str, extention: &str) -> Result<String> {
+pub fn highlight_text(text: &str, extention: &str, theme: Option<&str>) -> Result<String> {
     // Load these once at the start of your program
     let ps = SyntaxSet::load_defaults_newlines();
     let ts = ThemeSet::load_defaults();
 
-    let syntax = ps.find_syntax_by_extension(extention).unwrap();
-    let mut h = HighlightLines::new(syntax, &ts.themes["base16-ocean.dark"]);
+    // Find syntax extension or use plain text.
+    let syntax = ps
+        .find_syntax_by_extension(extention)
+        .unwrap_or_else(|| ps.find_syntax_plain_text());
+    let mut h = HighlightLines::new(
+        syntax,
+        &ts.themes[theme.unwrap_or_else(|| "base16-ocean.dark")],
+    );
 
     let mut output = String::new();
     for line in LinesWithEndings::from(text) {

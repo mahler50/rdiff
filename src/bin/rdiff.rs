@@ -1,9 +1,45 @@
 use anyhow::Result;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::{Input, MultiSelect};
-use rdiff::cli::{Action, Args, RunArgs};
-use rdiff::{DiffConfig, DiffProfile, ExtraArgs, RequestProfile, ResponseProfile, highlight_text};
+use rdiff::cli::{KeyVal, parse_key_val};
+use rdiff::{
+    DiffConfig, DiffProfile, ExtraArgs, LoadConfig, RequestProfile, ResponseProfile, highlight_text,
+};
+
+/// Diff two requests and compare the difference of responses.
+#[derive(Debug, Clone, Parser)]
+#[clap(version, author, about, long_about = None)]
+pub struct Args {
+    #[clap(subcommand)]
+    pub action: Action,
+}
+
+#[derive(Debug, Clone, Subcommand)]
+#[non_exhaustive]
+pub enum Action {
+    /// Diff two API responses based on the given profile.
+    Run(RunArgs),
+    Parse,
+}
+
+#[derive(Debug, Clone, Parser)]
+pub struct RunArgs {
+    /// Profile name.
+    #[clap(short, long, value_parser)]
+    pub profile: String,
+
+    /// Overrides args. Could be used to overrides params, headers and body of the request.
+    /// For query params, use `-e key=value`.
+    /// For headers, use `-e %key=value`.
+    /// For body, use `-e @key=value`.
+    #[clap(short, long, value_parser=parse_key_val, number_of_values=1)]
+    pub extra_params: Vec<KeyVal>,
+
+    /// Path to the YAML config file.
+    #[clap(short, long, value_parser)]
+    pub config: Option<String>,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -11,7 +47,6 @@ async fn main() -> Result<()> {
     match args.action {
         Action::Run(args) => run(args).await?,
         Action::Parse => parse().await?,
-        _ => panic!("Unsupported action"),
     }
 
     Ok(())
@@ -36,7 +71,7 @@ async fn run(args: RunArgs) -> Result<()> {
     Ok(())
 }
 
-/// Parse config content using cli.
+/// Parse config content from cli.
 async fn parse() -> Result<()> {
     let theme = ColorfulTheme::default();
     let url1: String = Input::with_theme(&theme)
@@ -47,7 +82,8 @@ async fn parse() -> Result<()> {
         .interact_text()?;
     let req1: RequestProfile = url1.parse()?;
     let req2: RequestProfile = url2.parse()?;
-    // Send a preflight request to get the headers.
+
+    // Send a pre-flight request to get the headers.
     let resp = req1.send(&ExtraArgs::default()).await?;
     let headers = resp.get_header_keys();
 
@@ -69,7 +105,7 @@ async fn parse() -> Result<()> {
     let config = DiffConfig::new(vec![(profile_name, profile)].into_iter().collect());
 
     let result = serde_yaml::to_string(&config)?;
-    let highlighten_text = highlight_text(&result, "yaml")?;
+    let highlighten_text = highlight_text(&result, "yaml", None)?;
     println!("{}", highlighten_text);
 
     Ok(())
